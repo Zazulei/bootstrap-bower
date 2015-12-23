@@ -554,7 +554,7 @@ angular.module('ui.bootstrap.carousel', [])
     } else if (currentIndex > index) {
       currentIndex--;
     }
-    
+
     //clean the currentSlide when no more slide
     if (slides.length === 0) {
       self.currentSlide = null;
@@ -1178,6 +1178,15 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
     }
   });
 
+  this.onMonthMovedCallback = function(){
+      if ( this.element ) {
+        if($scope.onMonthMovedCallback() !== undefined){
+          var dayDefinition = this._getDaysDefinition();
+          $scope.onMonthMovedCallback()(this._refreshView, dayDefinition.start, dayDefinition.end);
+        }
+      }
+    };
+
   angular.forEach(['minMode', 'maxMode'], function(key) {
     if ($attrs[key]) {
       $scope.$parent.$watch($parse($attrs[key]), function(value) {
@@ -1365,7 +1374,8 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       datepickerMode: '=?',
       dateDisabled: '&',
       customClass: '&',
-      shortcutPropagation: '&?'
+      shortcutPropagation: '&?',
+      onMonthMovedCallback:'&'
     },
     require: ['datepicker', '^ngModel'],
     controller: 'DatepickerController',
@@ -1374,6 +1384,7 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
       var datepickerCtrl = ctrls[0], ngModelCtrl = ctrls[1];
 
       datepickerCtrl.init(ngModelCtrl);
+      datepickerCtrl.onMonthMovedCallback();
     }
   };
 })
@@ -1437,6 +1448,15 @@ angular.module('ui.bootstrap.datepicker', ['ui.bootstrap.dateparser', 'ui.bootst
 
         scope.title = dateFilter(ctrl.activeDate, ctrl.formatDayTitle);
         scope.rows = ctrl.split(days, 7);
+
+        ctrl._getDaysDefinition = function() {
+            var obj = {};
+
+            obj.start = scope.rows[0][0];
+            obj.end = scope.rows[5][6];
+
+            return obj;
+        };
 
         if (scope.showWeeks) {
           scope.weekNumbers = [];
@@ -4077,10 +4097,10 @@ angular.module('ui.bootstrap.rating', [])
 
     this.stateOn = angular.isDefined($attrs.stateOn) ? $scope.$parent.$eval($attrs.stateOn) : ratingConfig.stateOn;
     this.stateOff = angular.isDefined($attrs.stateOff) ? $scope.$parent.$eval($attrs.stateOff) : ratingConfig.stateOff;
-    var tmpTitles = angular.isDefined($attrs.titles)  ? $scope.$parent.$eval($attrs.titles) : ratingConfig.titles ;    
+    var tmpTitles = angular.isDefined($attrs.titles)  ? $scope.$parent.$eval($attrs.titles) : ratingConfig.titles ;
     this.titles = angular.isArray(tmpTitles) && tmpTitles.length > 0 ?
       tmpTitles : ratingConfig.titles;
-    
+
     var ratingStates = angular.isDefined($attrs.ratingStates) ?
       $scope.$parent.$eval($attrs.ratingStates) :
       new Array(angular.isDefined($attrs.max) ? $scope.$parent.$eval($attrs.max) : ratingConfig.max);
@@ -4093,7 +4113,7 @@ angular.module('ui.bootstrap.rating', [])
     }
     return states;
   };
-  
+
   this.getTitle = function(index) {
     if (index >= this.titles.length) {
       return index + 1;
@@ -4101,7 +4121,7 @@ angular.module('ui.bootstrap.rating', [])
       return this.titles[index];
     }
   };
-  
+
   $scope.rate = function(value) {
     if (!$scope.readonly && value >= 0 && value <= $scope.range.length) {
       ngModelCtrl.$setViewValue(ngModelCtrl.$viewValue === value ? 0 : value);
